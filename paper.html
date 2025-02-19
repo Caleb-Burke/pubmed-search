@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Details</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .container { max-width: 800px; margin: auto; text-align: left; }
+        .abstract { background: #f9f9f9; padding: 15px; border-left: 4px solid #007bff; margin-top: 10px; }
+        .comments { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="paperTitle"></h1>
+        <p><strong>Source:</strong> <span id="paperSource"></span></p>
+        <p><strong>Published:</strong> <span id="paperDate"></span></p>
+        <a id="pubmedLink" href="#" target="_blank">View on PubMed</a>
+
+        <h2>Abstract</h2>
+        <div class="abstract" id="abstractContent">Loading...</div>
+
+        <h2>Comments & Reviews</h2>
+        <div class="comments" id="commentsSection">
+            <input type="text" id="commentInput" placeholder="Write a comment..." />
+            <button onclick="addComment()">Submit</button>
+            <ul id="commentsList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const pmid = urlParams.get("pmid");
+        const title = decodeURIComponent(urlParams.get("title"));
+        const source = decodeURIComponent(urlParams.get("source"));
+        const pubdate = decodeURIComponent(urlParams.get("pubdate"));
+
+        document.getElementById("paperTitle").innerText = title;
+        document.getElementById("paperSource").innerText = source;
+        document.getElementById("paperDate").innerText = pubdate;
+        document.getElementById("pubmedLink").href = `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`;
+
+        async function fetchAbstract() {
+            const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmid}&retmode=text&rettype=abstract`;
+            const response = await fetch(fetchUrl);
+            const text = await response.text();
+            document.getElementById("abstractContent").innerHTML = `<p>${text.replace(/\n/g, "<br>")}</p>`;
+        }
+        fetchAbstract();
+
+        function addComment() {
+            const commentText = document.getElementById("commentInput").value;
+            if (!commentText) return alert("Enter a comment first!");
+
+            const commentsList = document.getElementById("commentsList");
+            const listItem = document.createElement("li");
+            listItem.innerText = commentText;
+            commentsList.appendChild(listItem);
+
+            document.getElementById("commentInput").value = "";
+        }
+    </script>
+</body>
+</html>
