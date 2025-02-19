@@ -12,7 +12,7 @@
         .results { margin-top: 20px; }
         .paper { padding: 15px; border-bottom: 1px solid #ddd; cursor: pointer; }
         .paper:hover { background-color: #f5f5f5; }
-        .abstract { display: none; background: #f9f9f9; padding: 10px; margin-top: 10px; border-left: 4px solid #007bff; }
+        .abstract { display: none; background: #f9f9f9; padding: 10px; margin-top: 10px; border-left: 4px solid #007bff; white-space: pre-line; }
     </style>
 </head>
 <body>
@@ -51,13 +51,31 @@
             let output = "<h3>Results:</h3>";
             for (const id of searchData.esearchresult.idlist) {
                 const paper = summaryData.result[id];
-                output += `<div class="paper" onclick="viewPaper('${id}', '${encodeURIComponent(paper.title)}', '${encodeURIComponent(paper.source)}', '${encodeURIComponent(paper.pubdate)}')">
+                output += `<div class="paper">
                     <strong>${paper.title}</strong><br>
                     <small>${paper.source} | ${paper.pubdate}</small><br>
                     <a href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank">View on PubMed</a>
+                    <button onclick="fetchAbstract('${id}')">View Abstract</button>
+                    <button onclick="viewPaper('${id}', '${encodeURIComponent(paper.title)}', '${encodeURIComponent(paper.source)}', '${encodeURIComponent(paper.pubdate)}')">View Details</button>
+                    <div class="abstract" id="abstract-${id}"></div>
                 </div>`;
             }
             document.getElementById('results').innerHTML = output;
+        }
+
+        async function fetchAbstract(pmid) {
+            const abstractDiv = document.getElementById(`abstract-${pmid}`);
+            if (abstractDiv.innerHTML) {
+                abstractDiv.style.display = abstractDiv.style.display === "none" ? "block" : "none";
+                return;
+            }
+
+            const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmid}&retmode=text&rettype=abstract`;
+            const response = await fetch(fetchUrl);
+            const text = await response.text();
+
+            abstractDiv.innerHTML = `<p><strong>Abstract:</strong><br>${text.replace(/\n/g, "<br>")}</p>`;
+            abstractDiv.style.display = "block";
         }
 
         function viewPaper(pmid, title, source, pubdate) {
