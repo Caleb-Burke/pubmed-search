@@ -9,6 +9,8 @@
         input { width: 300px; padding: 10px; margin: 10px; }
         button { padding: 10px; cursor: pointer; }
         .results { margin-top: 20px; text-align: left; max-width: 600px; margin: auto; }
+        .paper { padding: 10px; border-bottom: 1px solid #ddd; }
+        .abstract { display: none; background: #f9f9f9; padding: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -36,17 +38,33 @@
             const summaryResponse = await fetch(summaryUrl);
             const summaryData = await summaryResponse.json();
 
-            let output = "<h3>Results:</h3><ul>";
+            let output = "<h3>Results:</h3>";
             for (const id of searchData.esearchresult.idlist) {
                 const paper = summaryData.result[id];
-                output += `<li>
+                output += `<div class="paper">
                     <strong>${paper.title}</strong><br>
                     <small>${paper.source} | ${paper.pubdate}</small><br>
                     <a href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank">View on PubMed</a>
-                </li><br>`;
+                    <button onclick="fetchAbstract('${id}')">View Abstract</button>
+                    <div class="abstract" id="abstract-${id}"></div>
+                </div>`;
             }
-            output += "</ul>";
             document.getElementById('results').innerHTML = output;
+        }
+
+        async function fetchAbstract(pmid) {
+            const abstractDiv = document.getElementById(`abstract-${pmid}`);
+            if (abstractDiv.innerHTML) {
+                abstractDiv.style.display = abstractDiv.style.display === "none" ? "block" : "none";
+                return;
+            }
+
+            const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmid}&retmode=text&rettype=abstract`;
+            const response = await fetch(fetchUrl);
+            const text = await response.text();
+
+            abstractDiv.innerHTML = `<p><strong>Abstract:</strong><br>${text}</p>`;
+            abstractDiv.style.display = "block";
         }
     </script>
 </body>
